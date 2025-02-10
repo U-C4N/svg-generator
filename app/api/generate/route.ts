@@ -10,17 +10,32 @@ async function generateDeepseekSVG(prompt: string) {
     body: JSON.stringify({
       messages: [{
         role: "user",
-        content: `You are a professional SVG creator. Create a clean, modern SVG based on this description: "${prompt}".
+        content: `You are a professional SVG creator specializing in geometric shape-based illustrations. Create a clean, modern SVG based on this description: "${prompt}".
 
-Requirements:
-- Use viewBox for proper scaling
-- Keep the SVG simple but visually appealing
-- Use modern design principles
-- Include basic animations where appropriate (using CSS or SMIL)
-- Optimize the code for web use
-- Use semantic element names
-- Include proper stroke-width and fill attributes
-- Set width and height to 100%
+Shape-Based Design Requirements:
+1. Primary Shapes (Use these as building blocks):
+   - <rect> for squares, rectangles, and backgrounds
+   - <circle> for dots, circles, and round elements
+   - <ellipse> for ovals and curved shapes
+   - <polygon> for triangles, stars, and complex polygons
+   - <line> for straight lines and borders
+   - <path> ONLY when absolutely necessary for complex curves
+
+2. Composition Rules:
+   - Break down complex objects into basic geometric shapes
+   - Use <g> elements to group related shapes
+   - Apply transform="translate(x,y)" for positioning
+   - Use transform="rotate(deg)" for orientation
+   - Maintain proper proportions between shapes
+   - Layer shapes effectively with proper ordering
+
+3. Styling Guidelines:
+   - Use a cohesive color palette (3-5 colors maximum)
+   - Apply consistent stroke-width across similar elements
+   - Use fill-opacity for depth and layering
+   - Add simple hover effects with CSS
+   - Keep shapes clean and geometric
+   - Use gradients sparingly for depth
 
 Return ONLY the SVG code without any explanation or markdown.
 The response must start with <svg and end with </svg>.`
@@ -41,24 +56,32 @@ async function generateGeminiSVG(prompt: string) {
     body: JSON.stringify({
       contents: [{
         parts: [{
-          text: `As an expert SVG designer, create a professional SVG illustration based on this description: "${prompt}".
+          text: `As an expert SVG designer specializing in geometric shapes, create a professional SVG illustration based on this description: "${prompt}".
 
-Technical Requirements:
-- Use viewBox attribute for responsive scaling
-- Set width and height to 100%
-- Include appropriate metadata
-- Use CSS variables for colors when possible
-- Implement smooth animations where relevant
-- Optimize paths and shapes
-- Use descriptive IDs and classes
-- Ensure accessibility with ARIA labels
+Shape-Based Design Requirements:
+1. Core SVG Shapes to Use:
+   - <rect> for all rectangular and square elements
+   - <circle> for perfect circles and dots
+   - <ellipse> for oval shapes and rounded elements
+   - <polygon> for triangles, stars, and multi-sided shapes
+   - <line> for connecting elements and borders
+   - Use <path> only as a last resort for complex curves
 
-Design Guidelines:
-- Follow minimalist design principles
-- Use a cohesive color scheme
-- Implement proper visual hierarchy
-- Consider negative space
-- Make it visually engaging
+2. Composition Guidelines:
+   - Decompose complex illustrations into basic shapes
+   - Group related elements with <g> tags
+   - Use transform attributes for positioning and rotation
+   - Apply proper layering with careful element ordering
+   - Maintain consistent proportions across shapes
+   - Create depth through strategic overlapping
+
+3. Visual Style:
+   - Limit to 3-5 colors for cohesive design
+   - Use consistent stroke widths within shape categories
+   - Apply fill-opacity for layering effects
+   - Add subtle transitions for interactivity
+   - Keep shapes geometric and clean
+   - Use minimal gradients for depth when needed
 
 Return ONLY the pure SVG code. Must start with <svg and end with </svg>.`
         }]
@@ -104,32 +127,40 @@ async function generateGPT4SVG(prompt: string) {
       },
       {
         role: "user",
-        content: `Create a professional SVG illustration for: "${prompt}"
+        content: `Create a professional SVG illustration using geometric shapes for: "${prompt}"
 
-Technical Specifications:
-1. Structure:
-   - Use viewBox for proper scaling
-   - Set width and height to 100%
-   - Include proper namespace declarations
-   - Use groups (<g>) for logical organization
+Shape-Based Design Specifications:
+1. Basic Shapes (Primary Building Blocks):
+   - Use <rect> for all rectangular shapes and backgrounds
+   - Use <circle> for round elements and points
+   - Use <ellipse> for oval shapes and curved elements
+   - Use <polygon> for triangles, stars, and complex shapes
+   - Use <line> for straight connections and borders
+   - Use <path> ONLY if absolutely necessary for complex curves
 
-2. Styling:
-   - Implement CSS custom properties for colors
-   - Use efficient CSS animations
-   - Apply proper stroke-width and fill attributes
-   - Include hover effects where appropriate
+2. Composition Techniques:
+   - Break down complex objects into basic geometric shapes
+   - Group related shapes using <g> elements
+   - Position elements using transform="translate(x,y)"
+   - Rotate shapes with transform="rotate(deg)"
+   - Scale elements appropriately with transform="scale(x,y)"
+   - Layer shapes with strategic ordering for depth
 
-3. Optimization:
-   - Minimize path points
-   - Use appropriate decimal precision
-   - Combine paths when possible
-   - Remove unnecessary attributes
+3. Visual Styling:
+   - Use a limited color palette (3-5 colors)
+   - Apply consistent stroke-width within shape categories
+   - Use fill-opacity for layering and depth
+   - Add subtle hover effects with CSS
+   - Keep shapes clean and geometric
+   - Use minimal gradients for depth effects
 
-4. Features:
-   - Add subtle animations
-   - Include interactive elements
-   - Implement smooth transitions
-   - Use gradients or patterns if relevant
+4. Technical Requirements:
+   - Set viewBox for proper scaling
+   - Use width="100%" and height="100%"
+   - Group related shapes logically
+   - Use descriptive IDs for main elements
+   - Optimize coordinate values
+   - Remove any unnecessary attributes
 
 Return ONLY the SVG code, no explanations. Must start with <svg and end with </svg>.`
       }]
@@ -188,4 +219,4 @@ export async function POST(request: Request) {
     console.error('Error generating SVGs:', error)
     return NextResponse.json({ error: 'Failed to generate SVGs' }, { status: 500 })
   }
-} 
+}      
