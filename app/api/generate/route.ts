@@ -1,31 +1,33 @@
 import { NextResponse } from 'next/server'
+import { SVG_SYSTEM_PROMPT, API_CONFIG } from '@/lib/config'
+
+// TypeScript interface for API responses
+interface AnthropicResponse {
+  content: Array<{type: string, text: string}>
+  id: string
+  model: string
+  role: string
+}
 
 async function generateDeepseekSVG(prompt: string) {
-  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+  const response = await fetch(API_CONFIG.deepseek.baseUrl + '/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+      'Authorization': `Bearer ${process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY}`
     },
     body: JSON.stringify({
-      messages: [{
-        role: "user",
-        content: `You are a professional SVG creator. Create a clean, modern SVG based on this description: "${prompt}".
-
-Requirements:
-- Use viewBox for proper scaling
-- Keep the SVG simple but visually appealing
-- Use modern design principles
-- Include basic animations where appropriate (using CSS or SMIL)
-- Optimize the code for web use
-- Use semantic element names
-- Include proper stroke-width and fill attributes
-- Set width and height to 100%
-
-Return ONLY the SVG code without any explanation or markdown.
-The response must start with <svg and end with </svg>.`
-      }],
-      model: "deepseek-chat"
+      messages: [
+        {
+          role: "system",
+          content: SVG_SYSTEM_PROMPT
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      model: API_CONFIG.deepseek.model
     })
   })
   const data = await response.json()
@@ -33,36 +35,21 @@ The response must start with <svg and end with </svg>.`
 }
 
 async function generateGeminiSVG(prompt: string) {
-  const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=' + process.env.GEMINI_API_KEY, {
+  const response = await fetch(`${API_CONFIG.google.baseUrl}/models/${API_CONFIG.google.model}:generateContent?key=${process.env.NEXT_PUBLIC_GOOGLE_API_KEY}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: `As an expert SVG designer, create a professional SVG illustration based on this description: "${prompt}".
-
-Technical Requirements:
-- Use viewBox attribute for responsive scaling
-- Set width and height to 100%
-- Include appropriate metadata
-- Use CSS variables for colors when possible
-- Implement smooth animations where relevant
-- Optimize paths and shapes
-- Use descriptive IDs and classes
-- Ensure accessibility with ARIA labels
-
-Design Guidelines:
-- Follow minimalist design principles
-- Use a cohesive color scheme
-- Implement proper visual hierarchy
-- Consider negative space
-- Make it visually engaging
-
-Return ONLY the pure SVG code. Must start with <svg and end with </svg>.`
-        }]
-      }],
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: SVG_SYSTEM_PROMPT },
+            { text: prompt }
+          ]
+        }
+      ],
       generationConfig: {
         temperature: 0.9,
         topK: 32,
@@ -80,7 +67,7 @@ Return ONLY the pure SVG code. Must start with <svg and end with </svg>.`
   const data = await response.json()
   
   try {
-    // Gemini 1.5 Pro response format is slightly different
+    // Gemini 2.0 Flash response format
     const content = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
     return extractSVG(content)
   } catch (error) {
@@ -89,50 +76,25 @@ Return ONLY the pure SVG code. Must start with <svg and end with </svg>.`
   }
 }
 
-async function generateGPT4SVG(prompt: string) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+async function generateOpenAISVG(prompt: string) {
+  const response = await fetch(`${API_CONFIG.openai.baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [{
-        role: "system",
-        content: `You are an expert SVG creator specializing in creating clean, optimized, and animated SVG graphics.`
-      },
-      {
-        role: "user",
-        content: `Create a professional SVG illustration for: "${prompt}"
-
-Technical Specifications:
-1. Structure:
-   - Use viewBox for proper scaling
-   - Set width and height to 100%
-   - Include proper namespace declarations
-   - Use groups (<g>) for logical organization
-
-2. Styling:
-   - Implement CSS custom properties for colors
-   - Use efficient CSS animations
-   - Apply proper stroke-width and fill attributes
-   - Include hover effects where appropriate
-
-3. Optimization:
-   - Minimize path points
-   - Use appropriate decimal precision
-   - Combine paths when possible
-   - Remove unnecessary attributes
-
-4. Features:
-   - Add subtle animations
-   - Include interactive elements
-   - Implement smooth transitions
-   - Use gradients or patterns if relevant
-
-Return ONLY the SVG code, no explanations. Must start with <svg and end with </svg>.`
-      }]
+      model: API_CONFIG.openai.model,
+      messages: [
+        {
+          role: "system",
+          content: SVG_SYSTEM_PROMPT
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ]
     })
   })
   const data = await response.json()
@@ -146,13 +108,16 @@ function extractSVG(content: string): string {
   
   // Extract SVG code
   const svgMatch = content.match(/<svg[\s\S]*?<\/svg>/);
-  if (!svgMatch) return '';
+  if (!svgMatch) {
+    console.log("Failed to extract SVG from:", content.substring(0, 200) + "...");
+    return '';
+  }
   
   let svg = svgMatch[0];
   
   // Ensure viewBox if not present
   if (!svg.includes('viewBox')) {
-    svg = svg.replace('<svg', '<svg viewBox="0 0 100 100"');
+    svg = svg.replace('<svg', '<svg viewBox="0 0 800 600"'); 
   }
   
   // Ensure width and height are 100%
@@ -166,6 +131,17 @@ function extractSVG(content: string): string {
     return match;
   });
   
+  // Ensure proper aria-label for accessibility if not present
+  if (!svg.includes('aria-label')) {
+    svg = svg.replace('<svg', '<svg aria-label="Generated SVG illustration"');
+  }
+  
+  // Basic validation - make sure the SVG isn't obviously broken
+  if (!svg.startsWith('<svg') || !svg.endsWith('</svg>')) {
+    console.error("Generated invalid SVG:", svg);
+    return '';
+  }
+  
   return svg;
 }
 
@@ -173,16 +149,17 @@ export async function POST(request: Request) {
   try {
     const { prompt } = await request.json()
 
-    const [deepseekSVG, geminiSVG, gpt4SVG] = await Promise.all([
+    // Generate SVGs from all models in parallel
+    const [deepseekSVG, geminiSVG, openaiSVG] = await Promise.all([
       generateDeepseekSVG(prompt),
       generateGeminiSVG(prompt),
-      generateGPT4SVG(prompt)
+      generateOpenAISVG(prompt)
     ])
 
     return NextResponse.json({
       deepseek: deepseekSVG,
       gemini: geminiSVG,
-      gpt4: gpt4SVG
+      openai: openaiSVG
     })
   } catch (error) {
     console.error('Error generating SVGs:', error)
