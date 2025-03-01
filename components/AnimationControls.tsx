@@ -19,7 +19,7 @@ import { useAppState } from "@/lib/context"
 
 export function AnimationControls() {
   const { previews } = useAppState()
-  const [selectedSvg, setSelectedSvg] = useState<"deepseek" | "anthropic" | "gemini" | "openai">("deepseek")
+  const [selectedSvg, setSelectedSvg] = useState<"deepseek" | "gemini" | "openai">("deepseek")
   const [duration, setDuration] = useState(1000)
   const [delay, setDelay] = useState(0)
   const [easing, setEasing] = useState("ease")
@@ -138,14 +138,13 @@ export function AnimationControls() {
               <Label>Select SVG</Label>
               <Select 
                 value={selectedSvg} 
-                onValueChange={(value: "deepseek" | "anthropic" | "gemini" | "openai") => setSelectedSvg(value)}
+                onValueChange={(value: "deepseek" | "gemini" | "openai") => setSelectedSvg(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select SVG" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="deepseek">Deepseek Chat</SelectItem>
-                  <SelectItem value="anthropic">Claude 3.7</SelectItem>
                   <SelectItem value="gemini">Gemini 2.0 Flash</SelectItem>
                   <SelectItem value="openai">GPT-4o</SelectItem>
                 </SelectContent>
